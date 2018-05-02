@@ -1,10 +1,26 @@
 package wordlist
 
 import (
-	"fmt"
 	"strings"
+	"errors"
+	"fmt"
 )
 
+func init(){
+	for i,d := range map[string]string{
+		"chinese_simplified": chineseRaw,
+		"chinese_traditional": chineseTwRaw,
+		"english": englishRaw,
+		"french": frenchRaw,
+		"italian": italianRaw,
+		"japanese": japaneseRaw,
+		"spanish": spanishRaw} {
+		dd := strings.Split(d, ",")
+		if DictLength!=len(dd) {
+			panic(fmt.Sprintf("invalid dict {%s} length:%d, expected:%d", i, len(dd), DictLength))
+		}
+	}
+}
 
 const (
 	DictLength = 2048
@@ -26,34 +42,34 @@ var originRawDicts = map[string]string{
 	"spanish": spanishRaw,
 }
 type Dict struct {
-	dict [DictLength]string
+	dictionary [DictLength]string
 	reversed map[string]int
 }
 
 func LoadWordDict(lang string) (*Dict, error) {
 	dictRawString,ok := originRawDicts[lang]
 	if !ok {
-		return nil, fmt.Errorf("invalid lang: %s", lang)
+		return nil, errors.New("invalid lang: " + lang)
 	}
 	dict := strings.Split(dictRawString, ",")
 	var result = [DictLength]string{}
 	for i,v := range dict {
 		result[i] = v
 	}
-	return &Dict{dict: result}, nil
+	return &Dict{dictionary: result}, nil
 }
 
 func (dict *Dict) Len() int {
-	return len(dict.dict)
+	return len(dict.dictionary)
 }
 
 func (dict *Dict) PickIndex(index int64) string {
-	return dict.dict[index]
+	return dict.dictionary[index]
 }
 func (dict *Dict) SeekWord(word string) (index int, ok bool) {
 	if dict.reversed == nil {
 		var temp = make(map[string]int, 0)
-		for i,v := range dict.dict {
+		for i,v := range dict.dictionary {
 			temp[v] = i
 		}
 		dict.reversed = temp

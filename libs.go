@@ -120,8 +120,13 @@ func (m *Mnemonic) pickMnemonic(entropy []byte) (string, error) {
 		//pharse[i] = WordList[asInt64]
 		pharse[i] = m.WordList.PickIndex(asInt64)
 	}
+	// \x20:ASCII标准空格/\xa0:nbsp(non-breaking space)不间断空白符/\u3000:全角空白符
 	// 日语 Join(pharse, "\u3000")
-	return strings.Join(pharse, " "), nil
+	if m.Language == Japanese {
+		return strings.Join(pharse, "\u3000"), nil
+	} else {
+		return strings.Join(pharse, " "), nil
+	}
 }
 
 func (m *Mnemonic) mnemonic2Entropy(mnemonic string) ([]byte, error){

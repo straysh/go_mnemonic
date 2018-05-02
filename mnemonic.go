@@ -62,16 +62,22 @@ const wordBits = 11
 const multiple = 32
 
 func NewMnemonic(lang DictLang) (*Mnemonic, error) {
-	if lang<English && lang>Spanish {
-		return nil, fmt.Errorf("invalid wordlist %s", lang)
+	if lang<English || lang>Spanish {
+		return nil, fmt.Errorf("NewMnemonic(lang DictLang): %d, %s", lang, lang)
 	}
 	m := &Mnemonic{Language: lang}
-	m.WordList,_ = wordlist.LoadWordDict(lang.String())
+	m.WordList,_ = wordlist.LoadWordDict(lang.String()) // DictLang 已经校验过,此处的错误可以忽略
 
 	return m, nil
 }
 
-func (m *Mnemonic) CreateRandom(entSize int, passpharse string) (*Mnemonic, error) {
+func (m *Mnemonic) CreateRandom(wordLen int, passpharse string) (*Mnemonic, error) {
+	if wordLen!=12 && wordLen!=15 && wordLen!=18 && wordLen!=21 && wordLen!=24 {
+		return nil, fmt.Errorf("invalid wordLen: %d, must be 12 or 15 or 18 or 21 or 24", wordLen)
+	}
+	mnemonicBitsLength := wordLen * wordBits
+	checksumBitsLength := mnemonicBitsLength % multiple
+	entSize := mnemonicBitsLength - checksumBitsLength
 	ent, err := m.generateRandomEntropy( uint(entSize) )
 	if err != nil {
 		return nil, err

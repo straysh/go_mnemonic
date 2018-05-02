@@ -5,17 +5,18 @@ import (
 
 	"fmt"
 	"github.com/straysh/go_mnemonic"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_create_random(t *testing.T) {
 	//words := "advice owner gadget brick degree vanish coconut end among erupt gain once"
 	//words := "advice owner gadget brick degree vanish coconut end among erupt gain oncd"
-	m, err := mnemonic.NewMnemonic(mnemonic.ChineseSimplified)
+	m, err := mnemonic.NewMnemonic(mnemonic.English)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	_, err = m.CreateRandom(128, "")
+	_, err = m.CreateRandom(12, "")
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -26,7 +27,7 @@ func Test_create_random(t *testing.T) {
 func Test_from_menmonic(t *testing.T) {
 	var words = "advice owner gadget brick degree vanish coconut end among erupt gain once"
 	var passpharse = ""
-	m, err := mnemonic.NewMnemonic(mnemonic.Japanese)
+	m, err := mnemonic.NewMnemonic(mnemonic.English)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -35,7 +36,7 @@ func Test_from_menmonic(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	} else {
-		t.Log( m.Mnemonic() )
+		assert.Equal(t, words, m.Mnemonic())
 	}
 
 }
