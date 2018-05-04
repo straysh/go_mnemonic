@@ -9,8 +9,6 @@ import (
 )
 
 func Test_create_random(t *testing.T) {
-	//words := "advice owner gadget brick degree vanish coconut end among erupt gain once"
-	//words := "advice owner gadget brick degree vanish coconut end among erupt gain oncd"
 	m, err := mnemonic.NewMnemonic(mnemonic.English)
 	if err != nil {
 		t.Error(err)
@@ -25,7 +23,7 @@ func Test_create_random(t *testing.T) {
 }
 
 func Test_from_menmonic(t *testing.T) {
-	var words = "advice owner gadget brick degree vanish coconut end among erupt gain once"
+	var words = "merry taxi mimic genuine refuse vital question organ salon method month measure"
 	var passpharse = ""
 	m, err := mnemonic.NewMnemonic(mnemonic.English)
 	if err != nil {
@@ -35,6 +33,7 @@ func Test_from_menmonic(t *testing.T) {
 	_, err = m.FromMnemonic(words, passpharse)
 	if err != nil {
 		t.Error(err)
+		t.FailNow()
 	} else {
 		assert.Equal(t, words, m.Mnemonic())
 	}

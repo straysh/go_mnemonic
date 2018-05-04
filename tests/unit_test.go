@@ -2,17 +2,14 @@ package tests
 
 import (
 	"testing"
-	. "github.com/straysh/go_mnemonic/wordlist"
-	"github.com/stretchr/testify/assert"
 	"fmt"
+	"github.com/straysh/go_mnemonic/utils"
+	"strconv"
 )
 
 func Test_words(t *testing.T) {
-	dict,err := LoadWordDict("japanese")
-	if err!=nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	assert.Equal(t, DictLength, dict.Len())
-	fmt.Println(dict.PickIndex(101))
+	n := 280
+	fmt.Println( utils.IntTo8BitsArray( n ) )
+	fmt.Printf( "%10s\n", string(utils.IntTo8BitsString( n )) )
+	fmt.Printf("%10s\n", strconv.FormatInt(280, 2) )
 }

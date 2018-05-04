@@ -120,7 +120,7 @@ func (m *Mnemonic) IsValid(mnemonic string) bool {
 	return m.isMnemonicValid(mnemonic)
 }
 
-func (m *Mnemonic) Mnemonic() (mnemonic string) {
+func (m *Mnemonic) Mnemonic() string {
 	return m.mnemonic
 }
 

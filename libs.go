@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 	"crypto/sha256"
 	"strconv"
+	"github.com/straysh/go_mnemonic/utils"
 )
 
 // CS = ENT / 32
@@ -47,16 +48,14 @@ func entropy2Checksum(ent []byte) string {
 	entropyBitsLength   := len(ent) * bitsInByte
 	checkhsumBitsLength := entropyBitsLength / multiple
 
-	var bin = ""
+	bin := make([]byte, 0)
 	for i:=0;i<len(hash);i++ {
-		bin = bin + fmt.Sprintf("%08b", hash[i])
-	}
-	for len(bin)%256 != 0 {
-		bin = "0" + bin
+		bufi := utils.IntTo8BitsArray( int(hash[i]) )
+		bin = append(bin, bufi[:]...)
 	}
 
 	checksum := bin[:checkhsumBitsLength]
-	return checksum
+	return string(checksum)
 }
 
 func (m *Mnemonic) isMnemonicValid(mnemonic string) bool {
@@ -69,13 +68,14 @@ func (m *Mnemonic) isMnemonicValid(mnemonic string) bool {
 		return false
 	}
 
-	binWithChecksum := ""
-	for _, word := range words {
+	binWithChecksum := make([]byte, 0)
+	for _,word := range words {
 		wordIndex, ok := m.WordList.SeekWord(word)
-		if ok == false {
+		if !ok {
 			return false
 		}
-		binWithChecksum = binWithChecksum + fmt.Sprintf("%011b", wordIndex)
+		buf := utils.IntTo11BitsArray(wordIndex)
+		binWithChecksum = append(binWithChecksum, buf[:]...)
 	}
 	if len(binWithChecksum) != mnemonicBitsLength {
 		return false
@@ -98,12 +98,13 @@ func (m *Mnemonic) pickMnemonic(entropy []byte) (string, error) {
 	checksumBitsLength := entropyBitsLength / 32
 	pharseLength := (entropyBitsLength + checksumBitsLength) / 11
 
-	bin := ""
-	for _, b := range entropy {
-		bin = bin + fmt.Sprintf("%08b", b)
+	bin := make([]byte, 0)
+	for _, b:= range entropy {
+		buf := utils.IntTo8BitsArray(int(b))
+		bin = append(bin, buf[:]...)
 	}
 	checksum := entropy2Checksum(entropy)
-	bin = bin + checksum
+	bin = append(bin, checksum...)
 	if len(bin)%11 !=0 {
 		return "", fmt.Errorf("invalid entropy checksum length %v %% 11 !==0", len(bin))
 	}
@@ -112,12 +113,11 @@ func (m *Mnemonic) pickMnemonic(entropy []byte) (string, error) {
 	for i:=0;i<pharseLength;i++{
 		startIndex := i * wordBits
 		endIndex   := startIndex + wordBits
-		byteAsBinaryString = bin[startIndex:endIndex]
+		byteAsBinaryString = string(bin[startIndex:endIndex])
 		asInt64, err := strconv.ParseInt(byteAsBinaryString, 2, 64)
 		if err != nil {
 			return "", err
 		}
-		//pharse[i] = WordList[asInt64]
 		pharse[i] = m.WordList.PickIndex(asInt64)
 	}
 	// \x20:ASCII标准空格/\xa0:nbsp(non-breaking space)不间断空白符/\u3000:全角空白符
@@ -139,13 +139,14 @@ func (m *Mnemonic) mnemonic2Entropy(mnemonic string) ([]byte, error){
 		return nil, fmt.Errorf("values must be 128<= ENT <= 256 and ENT %% 32 == 0, current is %v", entropyBitsLength)
 	}
 
-	binWithChecksum := ""
-	for _, word := range words {
+	binWithChecksum := make([]byte, 0)
+	for _,word := range words {
 		wordIndex, ok := m.WordList.SeekWord(word)
-		if ok == false {
+		if !ok {
 			return nil, fmt.Errorf("invalid word {%v} in wordlist", word)
 		}
-		binWithChecksum = binWithChecksum + fmt.Sprintf("%011b", wordIndex)
+		buf := utils.IntTo11BitsArray(wordIndex)
+		binWithChecksum = append(binWithChecksum, buf[:]...)
 	}
 	if len(binWithChecksum) != mnemonicBitsLength {
 		return nil, fmt.Errorf("mnemonicBitsLength should be %v, current %v, mnemonic: [%v]", mnemonicBitsLength, len(binWithChecksum), mnemonic)
@@ -162,9 +163,9 @@ func (m *Mnemonic) mnemonic2Entropy(mnemonic string) ([]byte, error){
 		startIndex := i * bitsInByte
 		endIndex   := startIndex + bitsInByte
 		if endIndex >= len(bin)-1 {
-			byteAsBinaryString = bin[startIndex:]
+			byteAsBinaryString = string(bin[startIndex:])
 		} else {
-			byteAsBinaryString = bin[startIndex:endIndex]
+			byteAsBinaryString = string(bin[startIndex:endIndex])
 		}
 		asInt64, err := strconv.ParseInt(byteAsBinaryString, 2, 64)
 		if err != nil {
@@ -173,6 +174,13 @@ func (m *Mnemonic) mnemonic2Entropy(mnemonic string) ([]byte, error){
 		ent[i] = byte(asInt64)
 	}
 
+	checksum := binWithChecksum[entropyBitsLength:]
+	if len(checksum) != checksumBitsLength{
+		return nil, fmt.Errorf("checksum expected %d character, but got %d", entropyBitsLength, len(checksum))
+	}
+	if string(checksum)!=entropy2Checksum(ent) {
+		return nil, fmt.Errorf("invalid mnemonic: invalid checksum")
+	}
 	return ent, nil
 }
 
